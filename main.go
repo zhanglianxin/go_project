@@ -9,6 +9,8 @@ import (
 	"os"
 	"io"
 	"github.com/gin-gonic/gin/binding"
+	"gopkg.in/go-playground/validator.v8"
+	"reflect"
 )
 
 var DB = make(map[string]string)
@@ -150,6 +152,9 @@ func main() {
 		}
 	})
 
+	// TODO apply the custom validation rule
+	router.GET("/bookable", getBookable)
+
 	router.Run(":8080")
 }
 
@@ -215,4 +220,29 @@ func MyBenchLogger() gin.HandlerFunc {
 type Login struct {
 	User string `form:"user" json:"user" binding:"required"`
 	Password string `form:"password" json:"password" binding:"required"`
+}
+
+type Booking struct {
+	CheckIn time.Time `form:"check_in" binding:"required,bookabledate" time_format:"2006-01-02"`
+	CheckOut time.Time `form:"check_out" binding:"required,gtfield=CheckIn" time_format:"2006-01-02"`
+}
+
+func getBookable(context *gin.Context) {
+	var b Booking
+	if err := context.ShouldBindWith(&b, binding.Default("GET", "")); err == nil {
+		context.JSON(http.StatusOK, gin.H{"message": "Booking dates are valid!"})
+	} else {
+		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+}
+
+func bookableDate(v *validator.Validate, topStruct reflect.Value, currentStructOrField reflect.Value,
+	field reflect.Value, fieldType reflect.Type, fieldKind reflect.Kind, param string,) bool {
+	if date, ok := field.Interface().(time.Time); ok {
+		today := time.Now()
+		if today.Year() > date.Year() || today.YearDay() > date.YearDay() {
+			return false
+		}
+	}
+	return true
 }
