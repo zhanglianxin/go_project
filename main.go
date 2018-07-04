@@ -155,6 +155,27 @@ func main() {
 	// TODO apply the custom validation rule
 	router.GET("/bookable", getBookable)
 
+	// Only bind query string
+	router.Any("/testing", func(context *gin.Context) {
+		var person Person
+		if context.ShouldBindWith(&person, binding.Default("GET", "")) == nil {
+			log.Println("====== Only Bind By Query String ======")
+			log.Println(person.Name)
+			log.Println(person.Address)
+		}
+		context.String(http.StatusOK, "Success")
+	})
+
+	// Bind query string or post data
+	router.GET("/testing1", func(context *gin.Context) {
+		var person Person
+		if context.ShouldBindWith(&person, binding.Form) == nil {
+			log.Println(person.Name)
+			log.Println(person.Address)
+			log.Println(person.Birthday)
+		}
+	})
+
 	router.Run(":8080")
 }
 
@@ -245,4 +266,10 @@ func bookableDate(v *validator.Validate, topStruct reflect.Value, currentStructO
 		}
 	}
 	return true
+}
+
+type Person struct {
+	Name string `form:"name"`
+	Address string `form:"address"`
+	Birthday time.Time `form:"birthday" time_format:"2006-01-02" time_utc:"1"`
 }
