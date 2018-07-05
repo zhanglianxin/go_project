@@ -182,6 +182,32 @@ func main() {
 
 	router.POST("/login", loginHandler)
 
+	router.GET("/some_json", func(context *gin.Context) {
+		context.JSON(http.StatusOK, gin.H{"message": "hey", "status": http.StatusOK})
+	})
+
+	router.GET("/more_json", func(context *gin.Context) {
+		var msg struct{
+			Name string `json:"user"`
+			Message string
+			Number int
+		}
+
+		msg.Name = "Lena"
+		msg.Message = "hey"
+		msg.Number = 123
+		// Note that msg.Name becomes "user" in the JSON
+		context.JSON(http.StatusOK, msg)
+	})
+
+	router.GET("/some_xml", func(context *gin.Context) {
+		context.XML(http.StatusOK, gin.H{"message": "hey", "status": http.StatusOK})
+	})
+
+	router.GET("/some_yaml", func(context *gin.Context) {
+		context.YAML(http.StatusOK, gin.H{"message": "hey", "status": http.StatusOK})
+	})
+
 	router.Run(":8080")
 }
 
