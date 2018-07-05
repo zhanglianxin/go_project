@@ -180,6 +180,8 @@ func main() {
 	router.GET("/bind_html_checkbox", bindHtmlHandler)
 	router.POST("/bind_html_checkbox", bindHtmlHandler)
 
+	router.POST("/login", loginHandler)
+
 	router.Run(":8080")
 }
 
@@ -290,5 +292,24 @@ func bindHtmlHandler(context *gin.Context) {
 	    	var fakeForm myForm
 	    	context.Bind(&fakeForm)
 	    	context.JSON(http.StatusOK, gin.H{"color": fakeForm.Colors})
+	}
+}
+
+type LoginForm struct {
+	User string `form:"user" binding:"required"`
+	Password string `form:"password" binding:"required"`
+}
+
+func loginHandler(context *gin.Context)  {
+	var form LoginForm
+	if err := context.ShouldBindWith(&form, binding.Form); err == nil {
+		if form.User == "user" && form.Password == "password" {
+			context.JSON(http.StatusOK, gin.H{"status": "you are logged in"})
+		} else {
+			context.JSON(http.StatusUnauthorized, gin.H{"status": "unauthorized"})
+		}
+	} else {
+		log.Println(err.Error())
+		context.JSON(http.StatusBadRequest, gin.H{"status": "bad request"})
 	}
 }
