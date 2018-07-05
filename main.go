@@ -176,6 +176,10 @@ func main() {
 		}
 	})
 
+	router.LoadHTMLGlob("views/*")
+	router.GET("/bind_html_checkbox", bindHtmlHandler)
+	router.POST("/bind_html_checkbox", bindHtmlHandler)
+
 	router.Run(":8080")
 }
 
@@ -272,4 +276,19 @@ type Person struct {
 	Name string `form:"name"`
 	Address string `form:"address"`
 	Birthday time.Time `form:"birthday" time_format:"2006-01-02" time_utc:"1"`
+}
+
+type myForm struct {
+	Colors []string `form:"colors[]"`
+}
+
+func bindHtmlHandler(context *gin.Context) {
+	switch context.Request.Method {
+	    case "GET":
+	    	context.HTML(http.StatusOK, "form.html", nil)
+	    case "POST":
+	    	var fakeForm myForm
+	    	context.Bind(&fakeForm)
+	    	context.JSON(http.StatusOK, gin.H{"color": fakeForm.Colors})
+	}
 }
