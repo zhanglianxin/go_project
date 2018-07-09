@@ -11,9 +11,13 @@ import (
 	"github.com/gin-gonic/gin/binding"
 	"gopkg.in/go-playground/validator.v8"
 	"reflect"
+	"database/sql"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 var DB = make(map[string]string)
+
+var db *sql.DB
 
 func setupRouter() *gin.Engine {
 	// Disable Console Color
@@ -64,6 +68,20 @@ func setupRouter() *gin.Engine {
 	})
 
 	return r
+}
+
+func init() {
+	var err error
+	db, err = sql.Open("mysql", "zhanglianxin:zhanglianxin@tcp(mysql:3306)/mylaravel")
+	if err != nil {
+		panic(err.Error())
+	}
+	// defer db.Close()
+
+	err = db.Ping()
+	if err != nil {
+		panic(err.Error())
+	}
 }
 
 func main() {
@@ -206,6 +224,19 @@ func main() {
 
 	router.GET("/some_yaml", func(context *gin.Context) {
 		context.YAML(http.StatusOK, gin.H{"message": "hey", "status": http.StatusOK})
+	})
+
+	router.GET("/testdb", func(context *gin.Context) {
+		var body string
+		err := db.QueryRow("SELECT body FROM blogs WHERE id=?", 1).Scan(&body)
+		switch {
+			case err == sql.ErrNoRows:
+				log.Printf("No user with that ID.")
+			case err != nil:
+				log.Fatal(err)
+			default:
+				fmt.Printf("Body is %s\n", body)
+		}
 	})
 
 	router.Run(":8080")
